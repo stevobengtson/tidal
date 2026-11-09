@@ -114,7 +114,9 @@ def norm(text: str | None) -> str:
     text = unicodedata.normalize("NFKD", text)
     text = "".join(c for c in text if not unicodedata.combining(c))
     text = text.lower().replace("&", " and ").replace("’", "'")
-    text = re.sub(r"[^a-z0-9 ]+", " ", text.replace("'", ""))
+    # \w keeps letters from any script, so a title in Japanese or Cyrillic
+    # does not collapse to an empty string.
+    text = re.sub(r"[^\w ]+|_", " ", text.replace("'", ""))
     text = re.sub(r"\s+", " ", text).strip()
     return re.sub(r"^the ", "", text)
 
@@ -185,7 +187,8 @@ def artist_score(station_artist: str, track) -> float:
 def title_score(station_title: str, track) -> float:
     wanted = title_variants(station_title)
     found = title_variants(track.name or "")
-    return max(similarity(w, f) for w in wanted for f in found)
+    # A title made only of symbols (e.g. "?" or "!!!") normalises to nothing.
+    return max((similarity(w, f) for w in wanted for f in found), default=0.0)
 
 
 def unwanted_reason(track, station_title: str) -> str | None:
