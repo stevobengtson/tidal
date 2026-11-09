@@ -73,6 +73,7 @@ SEARCH_LIMIT = 25
 ADD_CHUNK = 50
 DEFAULT_DELAY = 0.35  # seconds between TIDAL calls; TIDAL publishes no limits
 MAX_RETRIES = 5
+EXPLAIN_TOP = 5  # results per search shown by --explain
 RETRY_MISSING_DAYS = 14
 
 # Minimum similarity (0-1) for a TIDAL result to count as the same song.
@@ -539,7 +540,17 @@ class Searcher:
         live, live_rank = None, float("-inf")
 
         for query, limit in self._queries(artist, title):
-            for position, track in enumerate(self._search(query, limit)):
+            results = self._search(query, limit)
+            if self.explain:
+                print(f"    top results for '{query}':")
+                for track in results[:EXPLAIN_TOP]:
+                    print(
+                        f"      t={title_score(title, track):.2f} "
+                        f"a={artist_score(artist, track):.2f} {describe(track)}"
+                    )
+                if not results:
+                    print("      (none)")
+            for position, track in enumerate(results):
                 if track.id in seen:
                     continue
                 seen.add(track.id)
