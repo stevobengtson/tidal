@@ -2,3 +2,5 @@
 .remember/
 __pycache__/
 *.json
+bin/
+lib/
